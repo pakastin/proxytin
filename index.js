@@ -43,15 +43,20 @@ class Server {
 
       const settings = {};
 
+      settings.env = {
+        ...process.env
+      };
+
       if (env) {
         settings.env = {
-          ...process.env,
+          ...settings.env,
           env
         };
       }
 
       if (cwd) {
         settings.cwd = cwd;
+        settings.env.PATH = cwd + ':' + settings.env.PATH;
       }
 
       settings.silent = true;
@@ -205,6 +210,9 @@ module.exports = {
     server.start();
   },
   proxyTo (modulePath, id, settings) {
+    if (id != null && typeof id === 'object') {
+      return this.proxyTo(modulePath, null, id);
+    }
     return (req, res, next) => {
       const fullId = id ? `${modulePath}_${id}` : modulePath;
 
