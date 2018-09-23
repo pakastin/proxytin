@@ -1,6 +1,6 @@
 {
   "name": "proxytin",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Proxy with on-demand server launching",
   "main": "index.js",
   "scripts": {},
