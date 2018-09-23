@@ -94,7 +94,7 @@ class Server {
     this.done = false;
     this._connections++;
 
-    const port = await this.getPort();
+    const port = await this.getPort().catch(err => console.error(new Error(err)));
 
     if (!port) {
       return res.sendStatus(500);
