@@ -3,7 +3,7 @@ const cp = require('child_process');
 
 const agent = new http.Agent({ keepAlive: true });
 
-module.exports = class Server {
+class Server {
   constructor (modulePath) {
     this._modulePath = modulePath;
     this._starting = false;
@@ -32,12 +32,29 @@ module.exports = class Server {
 
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
+        this._starting = false;
+        this._connected = false;
+
         reject(new Error('Timeout'));
       }, 60 * 1000);
 
       this.child = cp.fork(this._modulePath);
 
-      this.child.on('message', ({ port }) => {
+      this.child.on('message', (data) => {
+        if (!data || typeof data !== 'object') {
+          return;
+        }
+        const { port, error } = data;
+
+        if (error) {
+          this._starting = false;
+          this._connected = false;
+
+          clearTimeout(timeout);
+
+          return reject(new Error(error));
+        }
+
         if (port) {
           this.port = port;
 
@@ -132,4 +149,25 @@ module.exports = class Server {
       proxyReq.end();
     });
   }
+}
+
+module.exports = {
+  listen: (app, cb) => {
+    const server = app.listen(0, (error) => {
+      if (error) {
+        process.send({
+          error
+        });
+        return cb(error);
+      }
+      const { port } = server.address();
+
+      process.send({
+        port
+      });
+
+      cb(null, port);
+    });
+  },
+  Server
 };
