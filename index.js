@@ -39,17 +39,22 @@ class Server {
         reject(new Error('Timeout'));
       }, 60 * 1000);
 
-      const { env = {} } = this._settings;
+      const { env, cwd } = this._settings;
 
-      this.child = cp.fork(this._modulePath, {
-        env: {
+      const settings = {};
+
+      if (env) {
+        settings.env = {
           ...process.env,
-          ...env
-        }
-      });
+          env
+        };
+      }
 
-      this.child.stdout.pipe(process.stdout);
-      this.child.stderr.pipe(process.stderr);
+      if (cwd) {
+        settings.cwd = cwd;
+      }
+
+      this.child = cp.fork(this._modulePath, settings);
 
       this.child.on('message', (data) => {
         if (!data || typeof data !== 'object') {
