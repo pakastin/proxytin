@@ -48,6 +48,9 @@ class Server {
         }
       });
 
+      this.child.stdout.pipe(process.stdout);
+      this.child.stderr.pipe(process.stderr);
+
       this.child.on('message', (data) => {
         if (!data || typeof data !== 'object') {
           return;
