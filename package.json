@@ -3,8 +3,15 @@
   "version": "0.0.1",
   "description": "Proxy with on-demand server launching",
   "main": "index.js",
-  "scripts": {
-  },
+  "scripts": {},
   "author": "Juha Lindstedt",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pakastin/proxytin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/pakastin/proxytin/issues"
+  },
+  "homepage": "https://github.com/pakastin/proxytin#readme"
 }
