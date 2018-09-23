@@ -1,0 +1,10 @@
+{
+  "name": "proxytin",
+  "version": "0.0.1",
+  "description": "Proxy that can launch on-demand servers",
+  "main": "index.js",
+  "scripts": {
+  },
+  "author": "Juha Lindstedt",
+  "license": "ISC"
+}
