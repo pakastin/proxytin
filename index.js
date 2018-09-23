@@ -151,14 +151,16 @@ class Server {
   }
 }
 
+const servers = {};
+
 module.exports = {
-  listen: (app, cb) => {
+  listen (app, cb) {
     const server = app.listen(0, (error) => {
       if (error) {
         process.send({
           error
         });
-        return cb(error);
+        return cb && cb(error);
       }
       const { port } = server.address();
 
@@ -166,8 +168,51 @@ module.exports = {
         port
       });
 
-      cb(null, port);
+      cb && cb(null, port);
     });
+  },
+  getPort (modulePath, id) {
+    const fullId = id ? `${modulePath}_${id}` : modulePath;
+
+    const server = servers[fullId] || (servers[fullId] = new Server(modulePath));
+
+    return server.getPort();
+  },
+  start (modulePath, id) {
+    const fullId = id ? `${modulePath}_${id}` : modulePath;
+
+    const server = servers[fullId] || (servers[fullId] = new Server(modulePath));
+
+    server.start();
+  },
+  proxyTo (modulePath, id) {
+    return (req, res, next) => {
+      const fullId = id ? `${modulePath}_${id}` : modulePath;
+
+      const server = servers[fullId] || (servers[fullId] = new Server(modulePath));
+      server.proxyTo(req, res, next);
+    };
+  },
+  middleware (cb) {
+    return (req, res, next) => {
+      const end = res.end;
+
+      res.end = () => {
+        end.call(res);
+
+        cb && cb();
+      };
+
+      next();
+    };
+  },
+  close (modulePath, id) {
+    const fullId = id ? `${modulePath}_${id}` : modulePath;
+
+    const server = servers[fullId] || (servers[fullId] = new Server(modulePath));
+    delete servers[fullId];
+
+    server.close();
   },
   Server
 };
