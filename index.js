@@ -4,8 +4,9 @@ const cp = require('child_process');
 const agent = new http.Agent({ keepAlive: true });
 
 class Server {
-  constructor (modulePath) {
+  constructor (modulePath, settings = {}) {
     this._modulePath = modulePath;
+    this._settings = settings;
     this._starting = false;
     this._closing = false;
     this._connected = false;
@@ -38,7 +39,14 @@ class Server {
         reject(new Error('Timeout'));
       }, 60 * 1000);
 
-      this.child = cp.fork(this._modulePath);
+      const { env = {} } = this._settings;
+
+      this.child = cp.fork(this._modulePath, {
+        env: {
+          ...process.env,
+          ...env
+        }
+      });
 
       this.child.on('message', (data) => {
         if (!data || typeof data !== 'object') {
@@ -185,11 +193,11 @@ module.exports = {
 
     server.start();
   },
-  proxyTo (modulePath, id) {
+  proxyTo (modulePath, id, settings) {
     return (req, res, next) => {
       const fullId = id ? `${modulePath}_${id}` : modulePath;
 
-      const server = servers[fullId] || (servers[fullId] = new Server(modulePath));
+      const server = servers[fullId] || (servers[fullId] = new Server(modulePath, settings));
       server.proxyTo(req, res, next);
     };
   },
