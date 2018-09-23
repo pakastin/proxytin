@@ -85,8 +85,6 @@ class Server {
         }
         this._starting = false;
         this._connected = false;
-
-        this.child.off('close', onClose);
       };
 
       this.child.on('close', onClose);
