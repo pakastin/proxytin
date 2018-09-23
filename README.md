@@ -17,6 +17,10 @@ const { listen } = require('proxytin');
 
 const app = express();
 
+app.get('/', (req, res, next) => {
+  res.send('Hello from a');
+});
+
 listen(app, (err, port) => {
   if (err) {
     throw new Error(err);
