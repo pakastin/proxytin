@@ -109,8 +109,7 @@ class Server {
     });
   }
   async proxyTo (req, res, next) {
-    this.done = false;
-    this._connections++;
+    let done = false;
 
     const port = await this.getPort().catch(err => console.error(new Error(err)));
 
@@ -119,6 +118,8 @@ class Server {
     }
 
     const { url } = req;
+
+    this._connections++;
 
     const proxyReq = http.request({
       ...req,
@@ -131,16 +132,31 @@ class Server {
       },
       host: 'localhost',
       port,
-      path: url
+      path: url,
+      timeout: 60000
     }, (proxyRes) => {
       res.writeHead(proxyRes.statusCode, proxyRes.headers);
+
+      proxyRes.on('error', (err) => {
+        console.error(new Error(err));
+        if (!done) {
+          this._connections--;
+
+          res.sendStatus(500);
+
+          if (this._closing) {
+            process.exit();
+          }
+        }
+        done = true;
+      });
 
       proxyRes.on('data', (chunk) => {
         res.write(chunk);
       });
 
       proxyRes.on('end', () => {
-        if (!this.done) {
+        if (!done) {
           this._connections--;
           res.end();
 
@@ -148,21 +164,22 @@ class Server {
             process.exit();
           }
         }
-        this.done = true;
+        done = true;
       });
     });
 
-    proxyReq.on('error', () => {
-      if (!this.done) {
+    req.on('error', (err) => {
+      console.error(new Error(err));
+      if (!done) {
         this._connections--;
-
-        res.sendStatus(500);
+        res.end();
 
         if (this._closing) {
           process.exit();
         }
       }
-      this.done = true;
+      done = true;
+      proxyReq.abort();
     });
 
     req.on('data', (chunk) => {
