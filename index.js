@@ -7,17 +7,12 @@ class Server {
   constructor (modulePath, settings = {}) {
     this._modulePath = modulePath;
     this._settings = settings;
-    this._starting = false;
-    this._closing = false;
-    this._connected = false;
-    this._connections = 0;
-  }
-  close () {
-    this._closing = true;
 
-    if (!this._connections) {
-      process.exit();
-    }
+    this._starting = false;
+    this._connected = false;
+    this._closing = false;
+
+    this._connections = 0;
   }
   getPort () {
     if (this._connected) {
@@ -189,6 +184,13 @@ class Server {
     req.on('end', () => {
       proxyReq.end();
     });
+  }
+  close () {
+    this._closing = true;
+
+    if (!this._connections) {
+      process.exit();
+    }
   }
 }
 
